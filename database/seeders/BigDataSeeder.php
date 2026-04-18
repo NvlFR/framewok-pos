@@ -30,7 +30,7 @@ class BigDataSeeder extends Seeder
         DB::table('users')->truncate();
         DB::table('roles')->truncate();
         DB::table('services')->truncate();
-        DB::table('paper_sizes')->truncate();
+        DB::table('variants')->truncate();
         DB::table('stocks')->truncate();
 
         // 2. Jalankan Seeder Master Data (Wajib Ada)
@@ -38,7 +38,7 @@ class BigDataSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-            PaperSizeSeeder::class,
+            VariantSeeder::class,
             StockSeeder::class,
             ServiceSeeder::class,
         ]);
@@ -46,7 +46,7 @@ class BigDataSeeder extends Seeder
         // Ambil ID yang dibutuhkan
         $userIds = DB::table('users')->pluck('id')->toArray();
         $serviceIds = DB::table('services')->pluck('id')->toArray();
-        $paperSizeIds = DB::table('paper_sizes')->pluck('id')->toArray();
+        $paperSizeIds = DB::table('variants')->pluck('id')->toArray();
 
         // --- 1. SEED CUSTOMERS (10,000) --- //
         $this->command->info('Seeding 10,000 customers...');
@@ -103,9 +103,9 @@ class BigDataSeeder extends Seeder
                         $tempItems[] = [
                             'service_id' => $faker->randomElement($serviceIds),
                             'service_name' => $faker->words(3, true),
-                            'paper_size_id' => $faker->randomElement($paperSizeIds),
-                            'paper_size_name' => $faker->randomElement(['A4', 'A3', 'F4', 'Quto']),
-                            'print_type' => $faker->randomElement(['color', 'bw']),
+                            'variant_id' => $faker->randomElement($paperSizeIds),
+                            'variant_name' => $faker->randomElement(['A4', 'A3', 'F4', 'Quto']),
+                            'modifier' => $faker->randomElement(['color', 'bw']),
                             'qty' => $qty,
                             'unit_price' => $uPrice,
                             'subtotal' => $iSubtotal,

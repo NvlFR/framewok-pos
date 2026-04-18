@@ -17,6 +17,13 @@ const props = defineProps<{
         monthly_revenue: number;
         monthly_expenses: number;
         pending_orders: number;
+        low_stock_count: number;
+        low_stock_items?: Array<{
+            id: number;
+            name: string;
+            current: number;
+            unit: string;
+        }>;
         net_profit: number;
         revenue_growth: number;
     };
@@ -195,7 +202,7 @@ const updateOrderStatus = (id: number, newStatus: string) => {
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h2>
-                    <p class="text-sm text-gray-500 mt-1">Ringkasan aktivitas dan performa percetakan hari ini.</p>
+                    <p class="text-sm text-gray-500 mt-1">Ringkasan aktivitas dan performa bisnis hari ini.</p>
                 </div>
                 <div class="flex gap-3">
                     <!-- <Link :href="route('transactions.create')" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4 shadow-sm">
@@ -206,7 +213,7 @@ const updateOrderStatus = (id: number, newStatus: string) => {
             </div>
 
             <!-- Metric Cards -->
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
                 <Card class="hover:shadow-md transition-shadow border">
                     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle class="text-sm font-medium text-gray-500">Penjualan Hari Ini</CardTitle>
@@ -272,6 +279,38 @@ const updateOrderStatus = (id: number, newStatus: string) => {
                         <p class="text-xs text-muted-foreground mt-1 text-red-500 font-medium">
                             Beban operasional berjalan
                         </p>
+                    </CardContent>
+                </Card>
+
+                <Card v-if="$page.props.auth.role === 'admin'" class="hover:shadow-md transition-shadow border">
+                    <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle class="text-sm font-medium text-gray-500">Stok Tipis</CardTitle>
+                        <div class="h-8 w-8 bg-orange-50 flex items-center justify-center rounded-lg text-orange-600">
+                            <AlertTriangle class="h-4 w-4" />
+                        </div>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div>
+                            <div class="break-words text-2xl font-bold leading-tight text-gray-900">{{ stats.low_stock_count }} <span class="text-base font-normal text-gray-500">item</span></div>
+                            <div class="flex gap-2 mt-1 items-center">
+                                <p class="text-xs text-orange-600 font-medium whitespace-nowrap">
+                                    <Link :href="route('stocks.index')" class="hover:underline">Perlu restock segera</Link>
+                                </p>
+                                <span class="text-gray-300 text-[10px]">•</span>
+                                <p class="text-xs text-blue-600 font-medium whitespace-nowrap">
+                                    <Link :href="route('stocks.logs')" class="hover:underline">Riwayat</Link>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div v-if="stats.low_stock_items && stats.low_stock_items.length > 0" class="pt-2">
+                           <ul class="space-y-2">
+                               <li v-for="item in stats.low_stock_items" :key="item.id" class="flex justify-between items-center text-xs p-2 bg-orange-50/50 rounded-lg border border-orange-100">
+                                   <span class="font-medium text-gray-700 truncate mr-2">{{ item.name }}</span>
+                                   <span class="text-red-600 font-bold shrink-0">{{ item.current }} {{ item.unit }}</span>
+                               </li>
+                           </ul>
+                        </div>
                     </CardContent>
                 </Card>
 

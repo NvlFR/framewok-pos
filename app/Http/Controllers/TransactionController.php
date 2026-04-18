@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PaperSize;
+use App\Models\Variant;
 use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
@@ -81,17 +81,17 @@ class TransactionController extends Controller
                 'base_price' => $s->base_price,
                 'unit' => $s->unit,
                 'has_matrix_pricing' => $s->has_matrix_pricing,
-                'is_per_meter' => (bool) $s->is_per_meter,
+                'is_custom_size' => (bool) $s->is_custom_size,
                 'is_pinned' => (bool) $s->is_pinned,
                 'prices' => $s->prices->map(fn ($p) => [
-                    'variant_id' => $p->paper_size_id,
+                    'variant_id' => $p->variant_id,
                     'variant_name' => $p->paperSize?->name,
-                    'attribute' => $p->print_type,
+                    'attribute' => $p->modifier,
                     'price' => $p->price,
                 ]),
             ]);
 
-        $variants = PaperSize::orderBy('name')->get(['id', 'name']);
+        $variants = Variant::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Transactions/Create', [
             'services' => $services,
@@ -108,8 +108,8 @@ class TransactionController extends Controller
             'customer_id' => ['required', 'exists:customers,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.service_id' => ['required', 'exists:services,id'],
-            'items.*.variant_id' => ['nullable', 'exists:paper_sizes,id'],
-            'items.*.attribute' => ['required', 'in:color,bw,na'],
+            'items.*.variant_id' => ['nullable', 'exists:variants,id'],
+            'items.*.attribute' => ['required', 'in:' . implode(',', array_keys(config('axiom.labels.attribute_values', [])))],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.width' => ['nullable', 'numeric', 'min:0.1'],
@@ -136,7 +136,7 @@ class TransactionController extends Controller
                         $qty = max(1, (int) $itemData['qty']);
                         $unitPrice = (float) $itemData['unit_price'];
 
-                        if ($service?->is_per_meter) {
+                        if ($service?->is_custom_size) {
                             $width = max(0.1, (float) ($itemData['width'] ?? 0.1));
                             $height = max(0.1, (float) ($itemData['height'] ?? 0.1));
                             $unitPrice = (float) $service->base_price * $width * $height;
@@ -192,7 +192,7 @@ class TransactionController extends Controller
                     ]);
 
                     $paperSizeIds = collect($request->items)->pluck('variant_id')->filter()->unique();
-                    $paperSizes = PaperSize::whereIn('id', $paperSizeIds)->get()->keyBy('id');
+                    $paperSizes = Variant::whereIn('id', $paperSizeIds)->get()->keyBy('id');
 
                     // Buat semua item transaksi
                     foreach ($resolvedItems as $itemData) {
@@ -212,10 +212,12 @@ class TransactionController extends Controller
                             'transaction_id' => $transaction->id,
                             'service_id' => $service?->id,
                             'service_name' => $service?->name,
-                            'paper_size_id' => $itemData['variant_id'] ?? null,
-                            'paper_size_name' => isset($itemData['variant_id']) ? $paperSizes->get($itemData['variant_id'])?->name : null,
-                            'print_type' => $itemData['attribute'],
+                            'variant_id' => $itemData['variant_id'] ?? null,
+                            'variant_name' => isset($itemData['variant_id']) ? $paperSizes->get($itemData['variant_id'])?->name : null,
+                            'modifier' => $itemData['attribute'],
                             'qty' => $itemData['qty'],
+                            'width' => $itemData['width'] ?? null,
+                            'height' => $itemData['height'] ?? null,
                             'unit_price' => $itemData['unit_price'],
                             'subtotal' => $itemData['unit_price'] * $itemData['qty'],
                             'file_path' => $filePath,
@@ -268,18 +270,20 @@ class TransactionController extends Controller
                 'status_label' => $transaction->status_label,
                 'notes' => $transaction->notes,
                 'created_at' => $transaction->created_at->format('d/m/Y H:i'),
-                'items' => $transaction->items->map(fn ($item) => [
-                    'id' => $item->id,
-                    'service_name' => $item->service_name,
-                    'paper_size_name' => $item->paper_size_name,
-                    'print_type' => $item->print_type,
-                    'print_type_label' => $item->print_type_label,
-                    'qty' => $item->qty,
-                    'unit_price' => $item->unit_price,
-                    'subtotal' => $item->subtotal,
-                    'item_notes' => $item->item_notes,
-                    'original_filename' => $item->original_filename,
-                ]),
+                    'items' => $transaction->items->map(fn ($item) => [
+                        'id' => $item->id,
+                        'service_name' => $item->service_name,
+                        'variant_name' => $item->variant_name,
+                        'modifier' => $item->modifier,
+                        'modifier_label' => $item->modifier_label,
+                        'qty' => $item->qty,
+                        'width' => $item->width,
+                        'height' => $item->height,
+                        'unit_price' => $item->unit_price,
+                        'subtotal' => $item->subtotal,
+                        'item_notes' => $item->item_notes,
+                        'original_filename' => $item->original_filename,
+                    ]),
             ],
             'status_options' => Transaction::getStatusOptions(),
         ]);

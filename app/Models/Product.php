@@ -17,7 +17,7 @@ class Product extends Model
         'unit',
         'has_matrix_pricing',
         'is_active',
-        'is_metered', // Pengganti is_per_meter agar bisa buat barang lain (kabel, kain, dll)
+        'is_metered', // Pengganti is_custom_size agar bisa buat barang lain (kabel, kain, dll)
         'is_pinned',
         'description',
     ];

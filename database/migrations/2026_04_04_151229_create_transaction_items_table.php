@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('transaction_id')->constrained('transactions')->cascadeOnDelete();
             $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
             $table->string('service_name'); // snapshot nama layanan saat transaksi
-            $table->foreignId('paper_size_id')->nullable()->constrained('paper_sizes')->nullOnDelete();
-            $table->string('paper_size_name')->nullable(); // snapshot nama ukuran kertas
-            $table->enum('print_type', ['color', 'bw', 'na'])->default('na'); // jenis cetak
+            $table->foreignId('variant_id')->nullable()->constrained('variants')->nullOnDelete();
+            $table->string('variant_name')->nullable(); // snapshot nama varian
+            $table->enum('modifier', ['premium', 'standar', 'na'])->default('na'); // jenis atribut
             $table->integer('qty');
             $table->decimal('unit_price', 12, 2); // snapshot harga saat transaksi
             $table->decimal('subtotal', 12, 2);

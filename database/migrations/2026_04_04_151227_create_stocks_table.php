@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // contoh: Kertas HVS A4, Tinta Hitam Epson
+            $table->string('name'); // contoh: Varian HVS A4, Tinta Hitam Epson
             $table->enum('category', ['kertas', 'tinta', 'bahan', 'lainnya'])->default('bahan');
             $table->string('unit')->default('rim'); // rim, botol, pcs, roll, dll
             $table->decimal('current_qty', 10, 2)->default(0);

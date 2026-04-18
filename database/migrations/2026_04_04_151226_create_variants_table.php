@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Membuat tabel paper_sizes untuk pilihan ukuran kertas pada layanan cetak.
+     * Membuat tabel variants untuk pilihan varian pada layanan.
      */
     public function up(): void
     {
-        Schema::create('paper_sizes', function (Blueprint $table) {
+        Schema::create('variants', function (Blueprint $table) {
             $table->id();
             $table->string('name'); // A4, A3, F4, A5, Banner, dll
             $table->string('width')->nullable();  // dalam cm (opsional)
@@ -22,6 +22,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('paper_sizes');
+        Schema::dropIfExists('variants');
     }
 };

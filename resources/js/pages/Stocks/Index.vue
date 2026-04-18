@@ -7,11 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { 
-    PlusIcon, 
-    ArrowDownUpIcon, 
-    AlertTriangleIcon,
-    HistoryIcon,
-    Box
+    Plus, 
+    ArrowDownUp, 
+    AlertTriangle,
+    History,
+    Box,
+    PackageSearch,
+    Search,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
@@ -182,11 +186,9 @@ const submitUpdateStock = () => {
                         </div>
                     </div>
 
-                    <div class="pt-1">
                         <Button variant="outline" size="sm" class="h-8 shadow-sm border-blue-200 text-blue-700 hover:bg-blue-50" @click="openUpdateModal(item)">
-                            <ArrowDownUpIcon class="h-3 w-3 mr-2" /> Keluar / Masuk
+                            <ArrowDownUp class="h-3 w-3 mr-2" /> Keluar / Masuk
                         </Button>
-                    </div>
                 </div>
 
                 <div v-if="stocks.data.length === 0" class="mobile-data-card py-12 text-center text-sm text-gray-500">
@@ -224,7 +226,7 @@ const submitUpdateStock = () => {
                             <td class="px-6 py-4 text-center text-gray-500">{{ item.min_qty }} {{ item.unit }}</td>
                             <td class="px-6 py-4 text-right">
                                 <Button variant="outline" size="sm" class="h-8 shadow-sm border-blue-200 text-blue-700 hover:bg-blue-50" @click="openUpdateModal(item)">
-                                    <ArrowDownUpIcon class="h-3 w-3 mr-2" /> Keluar / Masuk
+                                    <ArrowDownUp class="h-3 w-3 mr-2" /> Keluar / Masuk
                                 </Button>
                             </td>
                         </tr>
@@ -263,7 +265,7 @@ const submitUpdateStock = () => {
                 <form @submit.prevent="saveNewItem" class="space-y-4 py-4">
                     <div class="space-y-2">
                         <Label for="name">Nama Barang</Label>
-                        <Input id="name" v-model="formCreate.name" required placeholder="Cth: Kertas A4 HVS 80gsm SIDU" />
+                        <Input id="name" v-model="formCreate.name" required placeholder="Cth: Varian A4 HVS 80gsm SIDU" />
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="space-y-2">

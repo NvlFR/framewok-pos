@@ -322,7 +322,10 @@
     <div class="invoice-header">
         <div class="invoice-header-left">
             <div class="business-name">{{ strtoupper(config('axiom.brand.name')) }}</div>
-            <div class="business-tagline">{{ config('axiom.brand.tagline') }}</div>
+            <div class="business-tagline">{{ config('axiom.brand.slogan') }}</div>
+            <div style="font-size: 9px; color: #6b7280; margin-top: 4px;">
+                {{ config('axiom.brand.address') }} | {{ config('axiom.brand.phone') }}
+            </div>
         </div>
         <div class="invoice-header-right">
             <div class="invoice-number-label">Invoice</div>
@@ -386,15 +389,11 @@
                 <td>{{ $index + 1 }}</td>
                 <td>
                     <div class="service-name">{{ $item->service_name }}</div>
-                    @if($item->paper_size_name || ($item->print_type && $item->print_type !== 'na'))
-                        <div class="service-detail">
-                            @if($item->paper_size_name) Kertas {{ $item->paper_size_name }} @endif
-                            @if($item->paper_size_name && $item->print_type !== 'na') | @endif
-                            @if($item->print_type === 'bw') Hitam Putih
-                            @elseif($item->print_type === 'color') Warna Full
-                            @endif
-                        </div>
-                    @endif
+                    <div class="service-detail">
+                        @if($item->variant_name) Varian {{ $item->variant_name }} @endif
+                        @if($item->variant_name && $item->modifier_label !== '-') | @endif
+                        @if($item->modifier_label !== '-') {{ $item->modifier_label }} @endif
+                    </div>
                     @if($item->original_filename)
                         <div class="service-file">&#128206; {{ $item->original_filename }}</div>
                     @endif

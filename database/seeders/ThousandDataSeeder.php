@@ -30,7 +30,7 @@ class ThousandDataSeeder extends Seeder
         DB::table('users')->truncate();
         DB::table('roles')->truncate();
         DB::table('services')->truncate();
-        DB::table('paper_sizes')->truncate();
+        DB::table('variants')->truncate();
         DB::table('stocks')->truncate();
 
         // 2. Jalankan Seeder Master Data Dasar
@@ -38,7 +38,7 @@ class ThousandDataSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-            PaperSizeSeeder::class,
+            VariantSeeder::class,
             StockSeeder::class,
             ServiceSeeder::class,
         ]);
@@ -46,7 +46,7 @@ class ThousandDataSeeder extends Seeder
         // Ambil data referensi
         $userIds = DB::table('users')->pluck('id')->toArray();
         $serviceIds = DB::table('services')->pluck('id')->toArray();
-        $paperSizeIds = DB::table('paper_sizes')->pluck('id')->toArray();
+        $paperSizeIds = DB::table('variants')->pluck('id')->toArray();
         $stockIds = DB::table('stocks')->pluck('id')->toArray();
 
         // --- 1. SEED CUSTOMERS (1,000) ---
@@ -85,9 +85,9 @@ class ThousandDataSeeder extends Seeder
                 $transactionItems[] = [
                     'service_id' => $faker->randomElement($serviceIds),
                     'service_name' => 'Layanan '.($j + 1),
-                    'paper_size_id' => $faker->randomElement($paperSizeIds),
-                    'paper_size_name' => $faker->randomElement(['A4', 'A3', 'F4']),
-                    'print_type' => $faker->randomElement(['color', 'bw']),
+                    'variant_id' => $faker->randomElement($paperSizeIds),
+                    'variant_name' => $faker->randomElement(['A4', 'A3', 'F4']),
+                    'modifier' => $faker->randomElement(['color', 'bw']),
                     'qty' => $qty,
                     'unit_price' => $uPrice,
                     'subtotal' => $iSubtotal,

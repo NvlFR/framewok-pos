@@ -19,7 +19,7 @@ class Service extends Model
         'is_active',
         'description',
         'is_pinned',
-        'is_per_meter',
+        'is_custom_size',
     ];
 
     protected $casts = [
@@ -27,7 +27,7 @@ class Service extends Model
         'has_matrix_pricing' => 'boolean',
         'is_active' => 'boolean',
         'is_pinned' => 'boolean',
-        'is_per_meter' => 'boolean',
+        'is_custom_size' => 'boolean',
     ];
 
     /**

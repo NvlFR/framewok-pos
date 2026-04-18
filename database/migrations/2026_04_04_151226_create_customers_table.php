@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Membuat tabel customers untuk data pelanggan percetakan.
+     * Membuat tabel customers untuk data pelanggan bisnis.
      */
     public function up(): void
     {

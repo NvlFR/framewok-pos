@@ -12,10 +12,11 @@ return [
     */
 
     'brand' => [
-        'name'      => env('APP_NAME', 'My POS App'),
-        'slogan'    => env('APP_SLOGAN', 'Modern POS & Order Management'),
-        'tagline'   => env('APP_TAGLINE', 'Point of Sale & Order Management System'),
-        'logo_text' => env('APP_LOGO_TEXT', 'POS'),
+        'name' => env('AXIOM_BRAND_NAME', 'Axiom POS'),
+        'slogan' => env('AXIOM_BRAND_SLOGAN', 'Powerful POS & Management System'),
+        'address' => env('AXIOM_BRAND_ADDRESS', 'Digital Street No. 01, Metaverse'),
+        'phone' => env('AXIOM_BRAND_PHONE', '0812-3456-7890'),
+        'email' => env('AXIOM_BRAND_EMAIL', 'hello@axiom.pos'),
     ],
 
     'commerce' => [
@@ -36,29 +37,40 @@ return [
     */
 
     'labels' => [
-        // Entitas utama
-        'transaction'             => 'Transaksi',
-        'order'                   => 'Pesanan',
-        'customer'                => 'Pelanggan',
-        'service'                 => 'Layanan / Produk',
+        // Master Labels
+        'transaction' => 'Transaksi',
+        'order' => 'Pesanan',
+        'customer' => 'Pelanggan',
+        'service' => 'Layanan',
 
-        // Matrix Pricing
-        'variant'                 => 'Varian / Ukuran',
-        'attribute'               => 'Tipe / Warna',
+        // Matrix & Pricing Logic
+        'variant' => env('AXIOM_LABEL_VARIANT', 'Varian'),
+        'attribute' => env('AXIOM_LABEL_ATTRIBUTE', 'Tipe Opsi'),
         'attribute_values' => [
-            'color'               => 'Warna (Color)',
-            'bw'                  => 'Hitam Putih (BW)',
+            'standar' => 'Standar',
+            'premium' => 'Premium',
+            'special' => 'Spesial',
+            'economy' => 'Ekonomi',
+            'na' => 'N/A',
         ],
 
-        // Dimension / Per-Meter Pricing
-        'dimension_width'         => 'Lebar',
-        'dimension_height'        => 'Tinggi',
-        'dimension_unit'          => 'm',
+        // Dimension / Unit Logic
+        'dimension_width' => 'Lebar',
+        'dimension_height' => 'Tinggi',
+        'dimension_unit' => 'm',
 
-        // Misc
-        'secondary_option'        => 'Tipe / Kategori',
-        'item_note_placeholder'   => 'Catatan tambahan item...',
-        'general_note_placeholder'=> 'Catatan umum untuk pesanan...',
+        // Service Categories
+        'categories' => [
+            'reguler' => 'Reguler',
+            'ekstra' => 'Ekstra',
+            'premium' => 'Premium',
+            'custom' => 'Custom',
+            'lainnya' => 'Lainnya',
+        ],
+
+        // Placeholders & Instructions
+        'item_note_placeholder' => 'Catatan tambahan item...',
+        'general_note_placeholder' => 'Catatan umum untuk pesanan...',
     ],
 
     /*

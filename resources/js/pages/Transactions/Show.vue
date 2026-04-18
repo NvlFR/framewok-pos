@@ -18,9 +18,9 @@ import { useFormatRupiah } from '@/composables/useFormatRupiah';
 interface TransactionItem {
     id: number;
     service_name: string;
-    paper_size_name: string | null;
-    print_type: string;
-    print_type_label: string;
+    variant_name: string | null;
+    modifier: string;
+    modifier_label: string;
     qty: number;
     unit_price: string | number;
     subtotal: string | number;
@@ -169,8 +169,8 @@ const printThermal = () => {
                                 <div class="space-y-2">
                                     <p class="text-base font-semibold text-gray-900 break-words">{{ item.service_name }}</p>
                                     <div class="flex flex-wrap gap-2 text-xs text-gray-500">
-                                        <Badge v-if="item.paper_size_name" variant="secondary" class="font-normal">{{ item.paper_size_name }}</Badge>
-                                        <Badge v-if="item.print_type !== 'na'" variant="outline" class="font-normal">{{ item.print_type_label }}</Badge>
+                                        <Badge v-if="item.variant_name" variant="secondary" class="font-normal">{{ item.variant_name }}</Badge>
+                                        <Badge v-if="item.modifier !== 'na'" variant="outline" class="font-normal">{{ item.modifier_label }}</Badge>
                                     </div>
                                     <div v-if="item.original_filename" class="text-xs text-blue-600 flex items-center bg-blue-50 bg-opacity-50 w-fit px-2 py-1 rounded">
                                         <PaperclipIcon class="h-3 w-3 mr-1" /> {{ item.original_filename }}
@@ -212,8 +212,8 @@ const printThermal = () => {
                                         <td class="px-6 py-4">
                                             <p class="font-bold text-gray-900">{{ item.service_name }}</p>
                                             <div class="text-xs text-gray-500 mt-1 flex gap-2 flex-wrap">
-                                                <Badge v-if="item.paper_size_name" variant="secondary" class="font-normal">{{ item.paper_size_name }}</Badge>
-                                                <Badge v-if="item.print_type !== 'na'" variant="outline" class="font-normal">{{ item.print_type_label }}</Badge>
+                                                <Badge v-if="item.variant_name" variant="secondary" class="font-normal">{{ item.variant_name }}</Badge>
+                                                <Badge v-if="item.modifier !== 'na'" variant="outline" class="font-normal">{{ item.modifier_label }}</Badge>
                                             </div>
                                             <div v-if="item.original_filename" class="mt-2 text-xs text-blue-600 flex items-center bg-blue-50 bg-opacity-50 w-fit px-2 py-1 rounded">
                                                 <PaperclipIcon class="h-3 w-3 mr-1" /> {{ item.original_filename }}

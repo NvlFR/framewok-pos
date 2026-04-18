@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
             outDir: 'public/build',
             buildBase: '/build/',
             scope: '/',
-            injectRegister: null,
+            injectRegister: false,
             registerType: 'autoUpdate',
             manifest: {
                 name: appName,
@@ -115,6 +115,7 @@ export default defineConfig(({ mode }) => {
         // Suppress warning untuk chunk besar yang memang lazy (ApexCharts)
         chunkSizeWarningLimit: 600,
         rollupOptions: {
+            input: ['resources/css/app.css', 'resources/js/app.ts'],
             output: {
                 manualChunks(id) {
                     if (!id.includes('node_modules')) return;

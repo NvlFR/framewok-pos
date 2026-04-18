@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-            PaperSizeSeeder::class,
+            VariantSeeder::class,
             StockSeeder::class,
             ServiceSeeder::class,
             // BigDataSeeder::class, // Aktifkan hanya jika butuh 1jt data demo

@@ -8,20 +8,20 @@ return new class extends Migration
 {
     /**
      * Membuat tabel service_prices sebagai pricing matrix:
-     * harga per layanan berdasarkan ukuran kertas dan jenis cetak.
+     * harga per layanan berdasarkan varian dan atribut.
      */
     public function up(): void
     {
         Schema::create('service_prices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
-            $table->foreignId('paper_size_id')->nullable()->constrained('paper_sizes')->nullOnDelete();
-            $table->enum('print_type', ['color', 'bw', 'na'])->default('na'); // color, black&white, tidak berlaku
+            $table->foreignId('variant_id')->nullable()->constrained('variants')->nullOnDelete();
+            $table->enum('modifier', ['premium', 'standar', 'na'])->default('na'); // premium, standar, tidak berlaku
             $table->decimal('price', 12, 2);
             $table->timestamps();
 
-            // Kombinasi service + paper_size + print_type harus unik
-            $table->unique(['service_id', 'paper_size_id', 'print_type'], 'unique_service_price');
+            // Kombinasi service + variant + modifier harus unik
+            $table->unique(['service_id', 'variant_id', 'modifier'], 'unique_service_price');
         });
     }
 

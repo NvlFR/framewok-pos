@@ -9,8 +9,8 @@ class ServicePrice extends Model
 {
     protected $fillable = [
         'service_id',
-        'paper_size_id',
-        'print_type',
+        'variant_id',
+        'modifier',
         'price',
     ];
 
@@ -27,6 +27,6 @@ class ServicePrice extends Model
      */
     public function paperSize(): BelongsTo
     {
-        return $this->belongsTo(PaperSize::class);
+        return $this->belongsTo(Variant::class);
     }
 }

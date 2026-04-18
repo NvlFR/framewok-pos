@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PlusIcon, PencilIcon, TrashIcon, TagIcon, Package } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useFormatRupiah } from '@/composables/useFormatRupiah';
@@ -17,7 +17,7 @@ interface Service {
     base_price: string | number;
     unit: string;
     has_matrix_pricing: boolean;
-    is_per_meter: boolean;
+    is_custom_size: boolean;
     is_active: boolean;
     description: string;
     prices_count: number;
@@ -30,7 +30,7 @@ const props = defineProps<{
         current_page: number;
         last_page: number;
     };
-    paper_sizes: { id: number; name: string }[];
+    variants: { id: number; name: string }[];
     filters: { search?: string; category?: string };
 }>();
 
@@ -58,24 +58,13 @@ const editingId = ref<number | null>(null);
 // Form Layanan
 const form = useForm({
     name: '',
-    category: 'print',
+    category: 'reguler',
     base_price: 0,
-    unit: 'lembar',
+    unit: 'pcs',
     has_matrix_pricing: false,
-    is_per_meter: false,
+    is_custom_size: false,
     is_active: true,
     description: '',
-});
-
-// Auto-set is_per_meter & unit saat kategori Banner dipilih
-watch(() => form.category, (val) => {
-    if (val === 'banner') {
-        form.is_per_meter = true;
-        if (form.unit === 'lembar') form.unit = 'meter';
-    } else {
-        form.is_per_meter = false;
-        if (form.unit === 'meter') form.unit = 'lembar';
-    }
 });
 
 const openCreateModal = () => {
@@ -92,7 +81,7 @@ const openEditModal = (service: Service) => {
     form.base_price = Number(service.base_price);
     form.unit = service.unit;
     form.has_matrix_pricing = !!service.has_matrix_pricing;
-    form.is_per_meter = !!service.is_per_meter;
+    form.is_custom_size = !!service.is_custom_size;
     form.is_active = !!service.is_active;
     form.description = service.description || '';
     isModalOpen.value = true;
@@ -118,7 +107,7 @@ const saveService = () => {
 // Pricing Matrix Logic
 const isMatrixModalOpen = ref(false);
 const matrixForm = useForm({
-    prices: [] as Array<{ paper_size_id: number | string | null; print_type: string; price: number }>,
+    prices: [] as Array<{ variant_id: number | string | null; modifier: string; price: number }>,
 });
 
 const openMatrixModal = async (service: Service) => {
@@ -132,12 +121,12 @@ const openMatrixModal = async (service: Service) => {
         
         if (data.length > 0) {
             matrixForm.prices = data.map((p: any) => ({
-                paper_size_id: p.paper_size_id ? p.paper_size_id.toString() : null,
-                print_type: p.print_type,
+                variant_id: p.variant_id ? p.variant_id.toString() : null,
+                modifier: p.modifier,
                 price: Number(p.price)
             }));
         } else {
-            matrixForm.prices = [{ paper_size_id: null, print_type: 'bw', price: Number(service.base_price) }];
+            matrixForm.prices = [{ variant_id: null, modifier: 'standar', price: Number(service.base_price) }];
         }
     } catch (error) {
         console.error("Gagal mengambil data harga:", error);
@@ -145,7 +134,7 @@ const openMatrixModal = async (service: Service) => {
 };
 
 const addMatrixRow = () => {
-    matrixForm.prices.push({ paper_size_id: null, print_type: 'bw', price: Number(form.base_price) || 0 });
+    matrixForm.prices.push({ variant_id: null, modifier: 'standar', price: Number(form.base_price) || 0 });
 };
 
 const removeMatrixRow = (index: number) => {
@@ -188,6 +177,13 @@ const closeMatrixModal = () => {
 };
 
 const { formatRupiah } = useFormatRupiah();
+
+const axiom = computed(() => usePage().props.axiom as any || {
+    labels: {
+        categories: { reguler: 'Reguler' },
+        attribute_values: { standar: 'Standar' }
+    }
+});
 </script>
 
 <template>
@@ -214,12 +210,7 @@ const { formatRupiah } = useFormatRupiah();
                 </div>
                 <select v-model="categoryFilter" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 sm:w-[180px]">
                     <option value="">Semua Kategori</option>
-                    <option value="print">Print Dokumen</option>
-                    <option value="banner">Banner / Spanduk</option>
-                    <option value="foto">Cetak Foto</option>
-                    <option value="fotocopy">Fotocopy</option>
-                    <option value="laminasi">Laminasi / Jilid</option>
-                    <option value="lainnya">Lainnya</option>
+                    <option v-for="(v, k) in axiom.labels?.categories || {}" :key="k" :value="k">{{ v }}</option>
                 </select>
             </div>
 
@@ -339,7 +330,7 @@ const { formatRupiah } = useFormatRupiah();
                 <form @submit.prevent="saveService" class="space-y-4 py-4">
                     <div class="space-y-2">
                         <Label for="name">Nama Layanan <span class="text-red-500">*</span></Label>
-                        <Input id="name" v-model="form.name" required placeholder="Cth: Print Dokumen A4" />
+                        <Input id="name" v-model="form.name" required placeholder="Cth: Jasa Service Standar" />
                         <span class="text-xs text-red-500" v-if="form.errors.name">{{ form.errors.name }}</span>
                     </div>
 
@@ -347,12 +338,7 @@ const { formatRupiah } = useFormatRupiah();
                         <div class="space-y-2">
                             <Label for="category">Kategori <span class="text-red-500">*</span></Label>
                             <select id="category" v-model="form.category" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm block focus:outline-none focus:ring-1 focus:ring-blue-600">
-                                <option value="print">Print Dokumen</option>
-                                <option value="banner">Banner / Spanduk</option>
-                                <option value="foto">Cetak Foto</option>
-                                <option value="fotocopy">Fotocopy</option>
-                                <option value="laminasi">Laminasi / Jilid</option>
-                                <option value="lainnya">Lainnya</option>
+                                <option v-for="(v, k) in axiom.labels?.categories || {}" :key="k" :value="k">Kategori {{ v }}</option>
                             </select>
                         </div>
                         <div class="space-y-2">
@@ -372,15 +358,9 @@ const { formatRupiah } = useFormatRupiah();
                         <textarea id="description" v-model="form.description" class="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600" placeholder="Keterangan singkat tentang layanan ini"></textarea>
                     </div>
 
-                    <!-- Callout otomatis untuk banner -->
-                    <div v-if="form.category === 'banner'" class="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2.5 text-xs text-indigo-700 flex items-start gap-2">
-                        <span class="text-base leading-none">📐</span>
-                        <span>Kategori <b>Banner / Spanduk</b> otomatis mengaktifkan penghitungan harga per m² (Lebar × Tinggi).</span>
-                    </div>
-
                     <div class="flex items-center space-x-2 pt-2">
-                        <input type="checkbox" id="is_per_meter" v-model="form.is_per_meter" class="rounded border-gray-300 text-blue-600 focus:ring-blue-600">
-                        <Label for="is_per_meter" class="font-normal cursor-pointer">Harga Per Meter² (input Lebar × Tinggi di kasir)</Label>
+                        <input type="checkbox" id="is_custom_size" v-model="form.is_custom_size" class="rounded border-gray-300 text-blue-600 focus:ring-blue-600">
+                        <Label for="is_custom_size" class="font-normal cursor-pointer">Gunakan Skala Dimensi (Lebar × Tinggi)</Label>
                     </div>
 
                     <div class="flex items-center space-x-2">
@@ -409,23 +389,21 @@ const { formatRupiah } = useFormatRupiah();
                 </DialogHeader>
                 
                 <div class="py-4 space-y-4">
-                    <p class="text-sm text-gray-500">Atur harga spesifik berdasarkan kombinasi ukuran kertas dan tipe cetak.</p>
+                    <p class="text-sm text-gray-500">Atur harga spesifik berdasarkan kombinasi varian dan tipe opsi.</p>
                     
                     <div class="space-y-3">
                         <div v-for="(row, index) in matrixForm.prices" :key="index" class="flex flex-col sm:flex-row items-end sm:items-center gap-3 bg-gray-50 p-3 rounded-lg border">
                             <div class="flex-1 w-full">
-                                <Label class="text-[10px] uppercase font-bold text-gray-400 mb-1">Ukuran Kertas</Label>
-                                <select v-model="row.paper_size_id" class="flex h-8 w-full rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
-                                    <option :value="null">Ukuran Standar / NA</option>
-                                    <option v-for="ps in paper_sizes" :key="ps.id" :value="ps.id.toString()">{{ ps.name }}</option>
+                                <Label class="text-[10px] uppercase font-bold text-gray-400 mb-1">Pilihan Varian</Label>
+                                <select v-model="row.variant_id" class="flex h-8 w-full rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
+                                    <option :value="null">Varian Standar / NA</option>
+                                    <option v-for="ps in variants" :key="ps.id" :value="ps.id.toString()">{{ ps.name }}</option>
                                 </select>
                             </div>
                             <div class="flex-1 w-full">
-                                <Label class="text-[10px] uppercase font-bold text-gray-400 mb-1">Tipe Cetak</Label>
-                                <select v-model="row.print_type" class="flex h-8 w-full rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
-                                    <option value="bw">Hitam Putih</option>
-                                    <option value="color">Warna Full</option>
-                                    <option value="na">N/A (Lainnya)</option>
+                                <Label class="text-[10px] uppercase font-bold text-gray-400 mb-1">{{ axiom.labels?.attribute || 'Tipe' }}</Label>
+                                <select v-model="row.modifier" class="flex h-8 w-full rounded-md border border-input bg-white px-3 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-600">
+                                    <option v-for="(v, k) in axiom.labels?.attribute_values || {}" :key="k" :value="k">{{ v }}</option>
                                 </select>
                             </div>
                             <div class="w-full sm:w-32">

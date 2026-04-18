@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PaperSize;
+use App\Models\Variant;
 use App\Models\Service;
 use App\Models\ServicePrice;
 use Illuminate\Http\JsonResponse;
@@ -31,17 +31,17 @@ class ServiceController extends Controller
                 'base_price' => $service->base_price,
                 'unit' => $service->unit,
                 'has_matrix_pricing' => $service->has_matrix_pricing,
-                'is_per_meter' => $service->is_per_meter,
+                'is_custom_size' => $service->is_custom_size,
                 'is_active' => $service->is_active,
                 'description' => $service->description,
                 'prices_count' => $service->prices->count(),
             ]);
 
-        $paperSizes = PaperSize::orderBy('name')->get(['id', 'name']);
+        $paperSizes = Variant::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Services/Index', [
             'services' => $services,
-            'paper_sizes' => $paperSizes,
+            'variants' => $paperSizes,
             'filters' => $request->only(['search', 'category']),
         ]);
     }
@@ -57,7 +57,7 @@ class ServiceController extends Controller
             'base_price' => ['required', 'numeric', 'min:0'],
             'unit' => ['required', 'string', 'max:50'],
             'has_matrix_pricing' => ['boolean'],
-            'is_per_meter' => ['boolean'],
+            'is_custom_size' => ['boolean'],
             'is_active' => ['boolean'],
             'description' => ['nullable', 'string'],
         ], [
@@ -82,7 +82,7 @@ class ServiceController extends Controller
             'base_price' => ['required', 'numeric', 'min:0'],
             'unit' => ['required', 'string', 'max:50'],
             'has_matrix_pricing' => ['boolean'],
-            'is_per_meter' => ['boolean'],
+            'is_custom_size' => ['boolean'],
             'is_active' => ['boolean'],
             'description' => ['nullable', 'string'],
         ]);
@@ -119,8 +119,8 @@ class ServiceController extends Controller
     {
         $request->validate([
             'prices' => ['required', 'array'],
-            'prices.*.paper_size_id' => ['nullable', 'exists:paper_sizes,id'],
-            'prices.*.print_type' => ['required', 'in:color,bw,na'],
+            'prices.*.variant_id' => ['nullable', 'exists:variants,id'],
+            'prices.*.modifier' => ['required', 'in:color,bw,na'],
             'prices.*.price' => ['required', 'numeric', 'min:0'],
         ]);
 
@@ -130,8 +130,8 @@ class ServiceController extends Controller
         foreach ($request->prices as $priceData) {
             ServicePrice::create([
                 'service_id' => $service->id,
-                'paper_size_id' => $priceData['paper_size_id'] ?? null,
-                'print_type' => $priceData['print_type'],
+                'variant_id' => $priceData['variant_id'] ?? null,
+                'modifier' => $priceData['modifier'],
                 'price' => $priceData['price'],
             ]);
         }

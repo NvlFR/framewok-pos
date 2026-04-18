@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Stock;
 use App\Models\Expense;
 use App\Models\Transaction;
 use Carbon\Carbon;
@@ -68,6 +69,16 @@ class DashboardController extends Controller
             'monthly_revenue' => 0,
             'monthly_expenses' => 0,
             'pending_orders' => $pendingOrders,
+            'low_stock_count' => Stock::whereColumn('current_qty', '<=', 'min_qty')->count(),
+            'low_stock_items' => Stock::whereColumn('current_qty', '<=', 'min_qty')
+                ->take(5)
+                ->get()
+                ->map(fn ($s) => [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'current' => $s->current_qty,
+                    'unit' => $s->unit,
+                ]),
             'net_profit' => 0,
         ];
 
@@ -167,11 +178,10 @@ class DashboardController extends Controller
             ->map(function ($item) {
                 return [
                     'label' => match ($item->category) {
-                        'print' => 'Print Dokumen',
-                        'banner' => 'Banner / Spanduk',
-                        'foto' => 'Cetak Foto',
-                        'fotocopy' => 'Fotocopy',
-                        'laminasi' => 'Laminasi / Jilid',
+                        'reguler' => 'Layanan Standar',
+                        'ekstra' => 'Layanan Ekstra',
+                        'premium' => 'Produk Dinamis',
+                        'custom' => 'Custom Ukuran',
                         default => ucfirst($item->category),
                     },
                     'category' => $item->category,

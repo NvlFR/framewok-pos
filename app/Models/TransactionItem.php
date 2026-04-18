@@ -11,10 +11,12 @@ class TransactionItem extends Model
         'transaction_id',
         'service_id',
         'service_name',
-        'paper_size_id',
-        'paper_size_name',
-        'print_type',
+        'variant_id',
+        'variant_name',
+        'modifier',
         'qty',
+        'width',
+        'height',
         'unit_price',
         'subtotal',
         'file_path',
@@ -28,6 +30,8 @@ class TransactionItem extends Model
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
             'qty' => 'integer',
+            'width' => 'decimal:2',
+            'height' => 'decimal:2',
         ];
     }
 
@@ -48,22 +52,19 @@ class TransactionItem extends Model
     }
 
     /**
-     * Mendapatkan ukuran kertas yang digunakan dalam item ini.
+     * Mendapatkan ukuran/varian yang digunakan dalam item ini.
      */
-    public function paperSize(): BelongsTo
+    public function variant(): BelongsTo
     {
-        return $this->belongsTo(PaperSize::class);
+        return $this->belongsTo(Variant::class);
     }
 
     /**
-     * Mendapatkan label tampilan untuk jenis cetak.
+     * Mendapatkan label tampilan untuk modifier/atribut.
      */
-    public function getPrintTypeLabelAttribute(): string
+    public function getModifierLabelAttribute()
     {
-        return match ($this->print_type) {
-            'color' => 'Warna',
-            'bw' => 'Hitam Putih',
-            default => '-',
-        };
+        $all = config('axiom.labels.attribute_values', []);
+        return $all[$this->attribute] ?? $all[$this->modifier] ?? '-';
     }
 }

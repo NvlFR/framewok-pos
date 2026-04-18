@@ -146,13 +146,18 @@ class StockController extends Controller
     {
         $logs = StockLog::with(['stock', 'user', 'reference'])
             ->when($request->stock_id, fn ($q) => $q->where('stock_id', $request->stock_id))
+            ->when($request->search, function ($q, $search) {
+                $q->whereHas('stock', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            })
             ->latest()
             ->paginate(20)
             ->withQueryString()
             ->through(fn ($log) => [
                 'id' => $log->id,
-                'stock_name' => $log->stock->name,
-                'user_name' => $log->user->name,
+                'stock_name' => $log->stock?->name ?? 'N/A',
+                'user_name' => $log->user?->name ?? 'System',
                 'type' => $log->type,
                 'qty' => $log->qty,
                 'qty_before' => $log->qty_before,
@@ -170,7 +175,7 @@ class StockController extends Controller
         return Inertia::render('Stocks/Logs', [
             'logs' => $logs,
             'stocks' => $stocks,
-            'filters' => $request->only(['stock_id']),
+            'filters' => $request->only(['stock_id', 'search']),
         ]);
     }
 }

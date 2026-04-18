@@ -389,7 +389,7 @@ const getCategoryColor = (category: string) => {
 
                     <div class="space-y-2">
                         <Label for="description">Deskripsi <span class="text-red-500">*</span></Label>
-                        <Input id="description" v-model="formCreate.description" required placeholder="Cth: Beli tinta Epson dan Kertas HVS 10 Rim" />
+                        <Input id="description" v-model="formCreate.description" required placeholder="Cth: Beli tinta Epson dan Varian HVS 10 Rim" />
                     </div>
 
                     <div class="space-y-2">

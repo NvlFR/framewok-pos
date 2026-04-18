@@ -252,7 +252,11 @@
          ======================== -->
     <div class="header">
         <div class="shop-name">{{ strtoupper(config('axiom.brand.name')) }}</div>
-        <div class="shop-tagline">{{ config('axiom.brand.tagline') }}</div>
+        <div class="shop-tagline">{{ config('axiom.brand.slogan') }}</div>
+        <div style="font-size: 8px; margin-top: 4px;">
+            {{ config('axiom.brand.address') }} <br>
+            Telp: {{ config('axiom.brand.phone') }}
+        </div>
     </div>
 
     <!-- ========================
@@ -297,15 +301,11 @@
         @foreach($transaction->items as $item)
         <div class="item-row">
             <div class="item-name">{{ $item->service_name }}</div>
-            @if($item->paper_size_name || ($item->print_type && $item->print_type !== 'na'))
             <div class="item-detail">
-                @if($item->paper_size_name)Kertas {{ $item->paper_size_name }}@endif
-                @if($item->paper_size_name && $item->print_type !== 'na') | @endif
-                @if($item->print_type === 'bw')Hitam Putih
-                @elseif($item->print_type === 'color')Warna Full
-                @endif
+                @if($item->variant_name)Varian {{ $item->variant_name }}@endif
+                @if($item->variant_name && $item->modifier_label !== '-') | @endif
+                @if($item->modifier_label !== '-'){{ $item->modifier_label }}@endif
             </div>
-            @endif
             @if($item->item_notes)
             <div class="item-note">Catatan: {{ $item->item_notes }}</div>
             @endif
