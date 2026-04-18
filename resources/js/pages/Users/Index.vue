@@ -300,7 +300,7 @@ const executeDeleteUser = () => {
 
                     <div class="space-y-2">
                         <Label for="email">Alamat Email <span class="text-red-500">*</span></Label>
-                        <Input id="email" type="email" v-model="form.email" required placeholder="Cth: budi@primadaya.com" />
+                        <Input id="email" type="email" v-model="form.email" required placeholder="Cth: budi@domainanda.com" />
                         <span class="text-xs text-red-500" v-if="form.errors.email">{{ form.errors.email }}</span>
                     </div>
 

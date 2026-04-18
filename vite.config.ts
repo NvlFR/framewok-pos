@@ -3,10 +3,15 @@ import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
-import { defineConfig } from 'vite';
+import { loadEnv, defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '');
+    const appName = env.APP_NAME ?? 'My POS App';
+    const appShortName = appName.replace(/\s+/g, '').substring(0, 12);
+
+    return {
     plugins: [
         vue({
             template: {
@@ -27,9 +32,9 @@ export default defineConfig({
             injectRegister: null,
             registerType: 'autoUpdate',
             manifest: {
-                name: 'Primadaya Print',
-                short_name: 'Primadaya',
-                description: 'Primadaya Point of Sale',
+                name: appName,
+                short_name: appShortName,
+                description: 'Point of Sale & Order Management Framework',
                 theme_color: '#000000',
                 background_color: '#ffffff',
                 display: 'standalone',
@@ -138,8 +143,9 @@ export default defineConfig({
             },
         },
     },
-    server: {
-        host: true,
-        hmr: true,
-    },
+        server: {
+            host: true,
+            hmr: true,
+        },
+    };
 });

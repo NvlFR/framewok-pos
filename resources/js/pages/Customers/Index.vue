@@ -336,7 +336,7 @@ const executeDeleteCustomer = () => {
                 <form @submit.prevent="saveCustomer" class="space-y-4 py-4">
                     <div class="space-y-2">
                         <Label for="name">Nama Lengkap <span class="text-red-500">*</span></Label>
-                        <Input id="name" v-model="form.name" required placeholder="Cth: PT Primadaya Sejahtera" />
+                        <Input id="name" v-model="form.name" required placeholder="Cth: PT Maju Bersama" />
                         <span class="text-xs text-red-500" v-if="form.errors.name">{{ form.errors.name }}</span>
                     </div>
 

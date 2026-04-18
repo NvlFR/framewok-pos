@@ -54,23 +54,26 @@ class Transaction extends Model
     }
 
     /**
-     * Label tampilan untuk setiap status pesanan.
+     * Mendapatkan semua opsi status yang tersedia dari konfigurasi.
      */
-    public const STATUS_LABELS = [
-        'pending' => 'Pending',
-        'diproses' => 'Diproses',
-        'selesai' => 'Selesai',
-        'diambil' => 'Diambil',
-    ];
+    public static function getStatusOptions(): array
+    {
+        return config('axiom.workflow.statuses', [
+            'pending' => ['label' => 'Pending', 'color' => 'warning'],
+            'process' => ['label' => 'Diproses', 'color' => 'info'],
+            'done'    => ['label' => 'Selesai', 'color' => 'success'],
+            'closed'  => ['label' => 'Diambil', 'color' => 'secondary'],
+        ]);
+    }
 
     /**
-     * Warna badge untuk setiap status.
+     * Label tampilan untuk setiap status pesanan (Legacy support).
      */
-    public const STATUS_COLORS = [
-        'pending' => 'warning',
-        'diproses' => 'info',
-        'selesai' => 'success',
-        'diambil' => 'default',
+    public const STATUS_LABELS = [
+        'pending'  => 'Pending',
+        'process'  => 'Diproses',
+        'done'     => 'Selesai',
+        'closed'   => 'Diambil',
     ];
 
     /**
@@ -102,7 +105,8 @@ class Transaction extends Model
      */
     public function getStatusLabelAttribute(): string
     {
-        return self::STATUS_LABELS[$this->status] ?? $this->status;
+        $options = self::getStatusOptions();
+        return $options[$this->status]['label'] ?? $this->status;
     }
 
     /**
@@ -110,6 +114,7 @@ class Transaction extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return self::STATUS_COLORS[$this->status] ?? 'default';
+        $options = self::getStatusOptions();
+        return $options[$this->status]['color'] ?? 'secondary';
     }
 }

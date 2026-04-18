@@ -321,8 +321,8 @@
     {{-- ===================== HEADER ===================== --}}
     <div class="invoice-header">
         <div class="invoice-header-left">
-            <div class="business-name">PRIMADAYA PRINT</div>
-            <div class="business-tagline">Jasa Cetak & Percetakan Digital Profesional</div>
+            <div class="business-name">{{ strtoupper(config('axiom.brand.name')) }}</div>
+            <div class="business-tagline">{{ config('axiom.brand.tagline') }}</div>
         </div>
         <div class="invoice-header-right">
             <div class="invoice-number-label">Invoice</div>
@@ -473,11 +473,11 @@
     {{-- ===================== FOOTER ===================== --}}
     <div class="invoice-footer">
         <div class="footer-left">
-            Invoice ini dicetak otomatis oleh sistem kasir Primadaya Print.<br>
+            Invoice ini dicetak otomatis oleh sistem kasir {{ config('axiom.brand.name') }}.<br>
             Simpan sebagai bukti pembayaran yang sah.
         </div>
         <div class="footer-right">
-            <strong>Primadaya Print</strong>
+            <strong>{{ config('axiom.brand.name') }}</strong>
             Dicetak: {{ now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i') }} WIB
         </div>
     </div>

@@ -251,8 +251,8 @@
          HEADER TOKO
          ======================== -->
     <div class="header">
-        <div class="shop-name">PRIMADAYA PRINT</div>
-        <div class="shop-tagline">Jasa Cetak &amp; Percetakan Digital</div>
+        <div class="shop-name">{{ strtoupper(config('axiom.brand.name')) }}</div>
+        <div class="shop-tagline">{{ config('axiom.brand.tagline') }}</div>
     </div>
 
     <!-- ========================
@@ -374,7 +374,7 @@
     <div class="footer">
         <div class="footer-thanks">Terima Kasih!</div>
         <div>Simpan struk ini sebagai bukti pembayaran.</div>
-        <div style="margin-top: 3px;">Primadaya Print — Percetakan Profesional</div>
+        <div style="margin-top: 3px;">{{ config('axiom.brand.name') }}</div>
         <div style="margin-top: 3px; font-size: 8px; color: #999;">
             Dicetak: {{ now()->setTimezone('Asia/Jakarta')->format('d/m/Y H:i') }} WIB
         </div>

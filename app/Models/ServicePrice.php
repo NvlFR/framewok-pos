@@ -14,15 +14,8 @@ class ServicePrice extends Model
         'price',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'price' => 'decimal:2',
-        ];
-    }
-
     /**
-     * Mendapatkan layanan yang memiliki pricing ini.
+     * Relasi ke layanan.
      */
     public function service(): BelongsTo
     {
@@ -30,7 +23,7 @@ class ServicePrice extends Model
     }
 
     /**
-     * Mendapatkan ukuran kertas untuk pricing ini.
+     * Relasi ke ukuran kertas.
      */
     public function paperSize(): BelongsTo
     {

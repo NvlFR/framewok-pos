@@ -84,20 +84,18 @@ class TransactionController extends Controller
                 'is_per_meter' => (bool) $s->is_per_meter,
                 'is_pinned' => (bool) $s->is_pinned,
                 'prices' => $s->prices->map(fn ($p) => [
-                    'paper_size_id' => $p->paper_size_id,
-                    'paper_size_name' => $p->paperSize?->name,
-                    'print_type' => $p->print_type,
+                    'variant_id' => $p->paper_size_id,
+                    'variant_name' => $p->paperSize?->name,
+                    'attribute' => $p->print_type,
                     'price' => $p->price,
                 ]),
             ]);
 
-        $paperSizes = PaperSize::orderBy('name')->get(['id', 'name']);
+        $variants = PaperSize::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Transactions/Create', [
             'services' => $services,
-            // Daftar pelanggan tidak dimuat saat halaman dibuka (Issue #25)
-            // Data pelanggan di-load secara asinkron via endpoint /customers/search
-            'paper_sizes' => $paperSizes,
+            'variants' => $variants,
         ]);
     }
 
@@ -110,8 +108,8 @@ class TransactionController extends Controller
             'customer_id' => ['required', 'exists:customers,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.service_id' => ['required', 'exists:services,id'],
-            'items.*.paper_size_id' => ['nullable', 'exists:paper_sizes,id'],
-            'items.*.print_type' => ['required', 'in:color,bw,na'],
+            'items.*.variant_id' => ['nullable', 'exists:paper_sizes,id'],
+            'items.*.attribute' => ['required', 'in:color,bw,na'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.width' => ['nullable', 'numeric', 'min:0.1'],
@@ -193,13 +191,13 @@ class TransactionController extends Controller
                         'notes' => $request->notes,
                     ]);
 
-                    $paperSizeIds = collect($request->items)->pluck('paper_size_id')->filter()->unique();
+                    $paperSizeIds = collect($request->items)->pluck('variant_id')->filter()->unique();
                     $paperSizes = PaperSize::whereIn('id', $paperSizeIds)->get()->keyBy('id');
 
                     // Buat semua item transaksi
                     foreach ($resolvedItems as $itemData) {
                         $service = $services->get($itemData['service_id']);
-                        $paperSize = isset($itemData['paper_size_id']) ? $paperSizes->get($itemData['paper_size_id']) : null;
+                        // $paperSize = isset($itemData['variant_id']) ? $paperSizes->get($itemData['variant_id']) : null;
 
                         // Handle upload file custom order
                         $filePath = null;
@@ -214,9 +212,9 @@ class TransactionController extends Controller
                             'transaction_id' => $transaction->id,
                             'service_id' => $service?->id,
                             'service_name' => $service?->name,
-                            'paper_size_id' => $paperSize?->id,
-                            'paper_size_name' => $paperSize?->name,
-                            'print_type' => $itemData['print_type'],
+                            'paper_size_id' => $itemData['variant_id'] ?? null,
+                            'paper_size_name' => isset($itemData['variant_id']) ? $paperSizes->get($itemData['variant_id'])?->name : null,
+                            'print_type' => $itemData['attribute'],
                             'qty' => $itemData['qty'],
                             'unit_price' => $itemData['unit_price'],
                             'subtotal' => $itemData['unit_price'] * $itemData['qty'],
@@ -283,7 +281,7 @@ class TransactionController extends Controller
                     'original_filename' => $item->original_filename,
                 ]),
             ],
-            'status_options' => Transaction::STATUS_LABELS,
+            'status_options' => Transaction::getStatusOptions(),
         ]);
     }
 
@@ -293,7 +291,7 @@ class TransactionController extends Controller
     public function updateStatus(Request $request, Transaction $transaction): RedirectResponse
     {
         $request->validate([
-            'status' => ['required', 'in:pending,diproses,selesai,diambil'],
+            'status' => ['required', 'in:pending,process,done,closed'],
         ]);
 
         $transaction->update(['status' => $request->status]);
@@ -341,7 +339,7 @@ class TransactionController extends Controller
         return Inertia::render('Orders/Index', [
             'orders' => array_merge($orders->toArray(), ['status_counts' => $statusCounts]),
             'filters' => $request->only(['search', 'status', 'per_page']),
-            'status_options' => Transaction::STATUS_LABELS,
+            'status_options' => Transaction::getStatusOptions(),
         ]);
     }
 
@@ -353,7 +351,7 @@ class TransactionController extends Controller
         $validated = $request->validate([
             'transaction_ids' => ['required', 'array', 'min:1'],
             'transaction_ids.*' => ['integer', 'exists:transactions,id'],
-            'status' => ['required', 'in:pending,diproses,selesai,diambil'],
+            'status' => ['required', 'in:pending,process,done,closed'],
         ]);
 
         Transaction::whereIn('id', $validated['transaction_ids'])

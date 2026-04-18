@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onKeyStroke } from '@vueuse/core';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useFormatRupiah } from '@/composables/useFormatRupiah';
@@ -16,16 +16,27 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Trash2, ShoppingCart, Plus, Save, User, FileText,
-    RefreshCw, Zap, Keyboard, Loader2, AlertTriangle, UserPlus, Tag, Percent, Search, X
+    RefreshCw, Zap, Keyboard, Loader2, AlertTriangle, UserPlus, Tag, Percent, Search,
+    X
 } from 'lucide-vue-next';
 
 // ============================================================
 // Props dari Inertia (data awal dari controller)
 // ============================================================
 const props = defineProps<{
-    services: Array<any>;
-    paper_sizes: Array<any>;
+    services: any[];
+    variants: any[];
 }>();
+
+const axiom = computed(() => usePage().props.axiom as any || {
+    labels: {
+        variant: 'Ukuran',
+        attribute: 'Tipe',
+        dimension_width: 'Lebar',
+        dimension_height: 'Tinggi',
+        dimension_unit: 'm'
+    }
+});
 
 // ============================================================
 // State Combobox Async Pelanggan (Issue #25)
@@ -131,14 +142,14 @@ onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 const form = useForm({
     customer_id: 'none',
     items: [] as Array<{
-        service_id: string;
-        paper_size_id: string | null;
-        print_type: string;
+        service_id: number;
+        variant_id: number | null;
+        attribute: string;
         qty: number;
         unit_price: number;
         item_notes: string;
         file: File | null;
-        // Dimensi untuk layanan per-meter (contoh: Spanduk)
+        // Dimensi untuk layanan per-dimensi/luas
         width: number | undefined;
         height: number | undefined;
     }>,
@@ -220,41 +231,32 @@ const pinnedServices = computed(() => {
 // ============================================================
 watch(selectedServiceId, (newVal) => {
     if (newVal) {
-        addItem();
+        const service = props.services.find(s => s.id === parseInt(newVal));
+        if (service) addItem(service);
+        selectedServiceId.value = '';
     }
 });
 
 // ============================================================
 // Fungsi Menambahkan Layanan ke Keranjang
 // ============================================================
-const addItem = (serviceId?: number) => {
-    const idToAdd = serviceId || parseInt(selectedServiceId.value);
-    if (!idToAdd) return;
-
-    const service = props.services.find(s => s.id === idToAdd);
-    if (!service) return;
-
-    const isPerMeter = service.is_per_meter;
-    // Harga awal: per-meter = base_price × 1m × 1m, non-meter = base_price langsung
-    const initialPrice = parseFloat(service.base_price);
-
+const addItem = (service: any) => {
     form.items.push({
-        service_id: service.id.toString(),
-        paper_size_id: null,
-        print_type: service.has_matrix_pricing ? 'bw' : 'na',
+        service_id: service.id,
+        variant_id: service.has_matrix_pricing && service.prices.length > 0 ? service.prices[0].variant_id : (props.variants.length > 0 ? props.variants[0].id : null),
+        attribute: service.has_matrix_pricing && service.prices.length > 0 ? service.prices[0].attribute : 'na',
         qty: 1,
-        unit_price: initialPrice,
+        unit_price: service.base_price || 0,
         item_notes: '',
         file: null,
-        width: isPerMeter ? 1 : undefined,
-        height: isPerMeter ? 1 : undefined,
+        width: service.is_per_meter ? 1 : undefined,
+        height: service.is_per_meter ? 1 : undefined,
     });
-
-    selectedServiceId.value = ''; // reset dropdown
+    updateItemPrice(form.items.length - 1);
 };
 
-const findServiceByItem = (item: { service_id: string }) =>
-    props.services.find(service => service.id === parseInt(item.service_id));
+const findServiceByItem = (item: { service_id: number }) =>
+    props.services.find(service => service.id === item.service_id);
 
 const normalizeQty = (item: { qty: number }) => {
     item.qty = Math.max(1, Number(item.qty) || 1);
@@ -268,7 +270,7 @@ const getItemArea = (item: { width: number | undefined; height: number | undefin
 };
 
 const getItemUnitPrice = (item: {
-    service_id: string;
+    service_id: number;
     unit_price: number;
     width: number | undefined;
     height: number | undefined;
@@ -283,7 +285,7 @@ const getItemUnitPrice = (item: {
 };
 
 const getItemSubtotal = (item: {
-    service_id: string;
+    service_id: number;
     unit_price: number;
     qty: number;
     width: number | undefined;
@@ -296,7 +298,7 @@ const getItemSubtotal = (item: {
  */
 const updateDimensions = (index: number) => {
     const item = form.items[index];
-    const service = props.services.find(s => s.id === parseInt(item.service_id));
+    const service = props.services.find(s => s.id === item.service_id);
     if (service?.is_per_meter) {
         const w = Number(item.width) || 0;
         const h = Number(item.height) || 0;
@@ -328,13 +330,17 @@ const executeRemoveItem = () => {
 // ============================================================
 const updateItemPrice = (index: number) => {
     const item = form.items[index];
-    const service = props.services.find(s => s.id === parseInt(item.service_id));
+    const service = props.services.find(s => s.id === item.service_id);
 
-    if (service && service.has_matrix_pricing) {
-        const priceObj = service.prices.find((p: any) =>
-            p.paper_size_id == item.paper_size_id && p.print_type === item.print_type
+    if (service?.has_matrix_pricing) {
+        const pricing = service.prices.find((p: any) =>
+            p.variant_id == item.variant_id && p.attribute == item.attribute
         );
-        item.unit_price = priceObj ? parseFloat(priceObj.price) : parseFloat(service.base_price);
+        if (pricing) {
+            item.unit_price = pricing.price;
+        }
+    } else {
+        item.unit_price = service?.base_price || 0;
     }
 };
 
@@ -932,21 +938,37 @@ const shouldShowPaymentError = computed(() =>
                                     <!-- ===== MATRIX PRICING (Fotocopy/Print): Pilih Ukuran & Tipe ===== -->
                                     <template v-if="services.find(s => s.id == item.service_id)?.has_matrix_pricing">
                                         <div class="space-y-1">
-                                            <Label class="text-[10px] font-bold uppercase text-gray-400">Ukuran Kertas</Label>
-                                            <Select v-model="item.paper_size_id" @update:modelValue="updateItemPrice(index)">
-                                                <SelectTrigger class="h-9 w-[130px] bg-white text-xs"><SelectValue placeholder="Pilih Ukuran" /></SelectTrigger>
+                                            <Label class="text-[10px] font-bold uppercase text-gray-400">{{ axiom.labels.variant }}</Label>
+                                            <Select
+                                                v-model="item.variant_id"
+                                                @update:model-value="() => updateItemPrice(index)"
+                                            >
+                                                <SelectTrigger class="h-9 w-[130px] bg-white font-medium">
+                                                    <SelectValue :placeholder="`Pilih ${axiom.labels.variant}`" />
+                                                </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem v-for="ps in paper_sizes" :key="ps.id" :value="ps.id.toString()">Kertas {{ ps.name }}</SelectItem>
+                                                    <SelectItem
+                                                        v-for="ps in props.variants"
+                                                        :key="ps.id"
+                                                        :value="ps.id"
+                                                    >
+                                                        {{ ps.name }}
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                         <div class="space-y-1">
-                                            <Label class="text-[10px] font-bold uppercase text-gray-400">Tipe Cetak</Label>
-                                            <Select v-model="item.print_type" @update:modelValue="updateItemPrice(index)">
-                                                <SelectTrigger class="h-9 w-[120px] bg-white text-xs"><SelectValue placeholder="Warna/BW" /></SelectTrigger>
+                                            <Label class="text-[10px] font-bold uppercase text-gray-400">{{ axiom.labels.attribute }}</Label>
+                                            <Select
+                                                v-model="item.attribute"
+                                                @update:model-value="() => updateItemPrice(index)"
+                                            >
+                                                <SelectTrigger class="h-9 w-[140px] bg-white font-medium">
+                                                    <SelectValue :placeholder="`Pilih ${axiom.labels.attribute}`" />
+                                                </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="color">Warna Full</SelectItem>
-                                                    <SelectItem value="bw">Hitam Putih</SelectItem>
+                                                    <SelectItem value="color">{{ axiom.labels.attribute_values?.color || 'Warna' }}</SelectItem>
+                                                    <SelectItem value="bw">{{ axiom.labels.attribute_values?.bw || 'Hitam Putih' }}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -957,49 +979,48 @@ const shouldShowPaymentError = computed(() =>
                                         <!-- Baris dimensi: Lebar × Tinggi = Luas -->
                                         <div class="flex flex-wrap items-end gap-2">
                                             <div class="space-y-1">
-                                                <Label class="text-[10px] font-bold uppercase text-gray-400">Lebar (m)</Label>
+                                                <Label class="text-[10px] font-bold uppercase text-gray-400">{{ axiom.labels.dimension_width }} ({{ axiom.labels.dimension_unit }})</Label>
                                                 <Input
                                                     v-model.number="item.width"
                                                     type="number"
-                                                    step="0.1"
-                                                    min="0.5"
+                                                    step="0.01"
                                                     class="h-9 w-[80px] bg-white text-center font-medium"
                                                     @input="updateDimensions(index)"
                                                 />
                                             </div>
-                                            <span class="mb-2 text-lg font-bold text-gray-300">×</span>
+                                            <div class="flex items-center pt-5 text-gray-300">
+                                                <X class="h-3 w-3" />
+                                            </div>
                                             <div class="space-y-1">
-                                                <Label class="text-[10px] font-bold uppercase text-gray-400">Tinggi (m)</Label>
+                                                <Label class="text-[10px] font-bold uppercase text-gray-400">{{ axiom.labels.dimension_height }} ({{ axiom.labels.dimension_unit }})</Label>
                                                 <Input
                                                     v-model.number="item.height"
                                                     type="number"
-                                                    step="0.1"
-                                                    min="0.5"
+                                                    step="0.01"
                                                     class="h-9 w-[80px] bg-white text-center font-medium"
                                                     @input="updateDimensions(index)"
                                                 />
                                             </div>
-                                            <span class="mb-2 text-lg font-bold text-gray-300">=</span>
                                             <div class="space-y-1">
-                                                <Label class="text-[10px] font-bold uppercase text-gray-400">Luas (m²)</Label>
-                                                <div class="flex h-9 w-[80px] items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-sm font-bold text-indigo-700">
-                                                    {{ getItemArea(item).toFixed(2) }}
+                                                <Label class="text-[10px] font-bold uppercase text-gray-400">Luas ({{ axiom.labels.dimension_unit }}²)</Label>
+                                                <div class="flex h-9 w-[90px] items-center justify-center rounded-md border border-indigo-100 bg-indigo-50/50 text-xs font-bold text-indigo-700">
+                                                    {{ getItemArea(item).toFixed(2) }} {{ axiom.labels.dimension_unit }}²
                                                 </div>
                                             </div>
                                             <span class="mb-2 text-lg font-bold text-gray-300">×</span>
                                             <!-- Tarif per m² -->
                                             <div class="space-y-1">
-                                                <Label class="text-[10px] font-bold uppercase text-gray-400">Tarif /m²</Label>
+                                                <Label class="text-[10px] font-bold uppercase text-gray-400">Tarif /{{ axiom.labels.dimension_unit }}²</Label>
                                                 <div class="flex h-9 items-center rounded-md border border-dashed bg-gray-50 px-3 text-xs font-semibold text-gray-600">
                                                     {{ formatRupiah(services.find(s => s.id == item.service_id)?.base_price || 0) }}
                                                 </div>
                                             </div>
                                         </div>
                                         <!-- Keterangan rumus harga -->
-                                        <div class="flex items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-1.5 text-[11px] text-indigo-600">
-                                            <span class="font-mono font-bold">{{ getItemArea(item).toFixed(2) }} m²</span>
+                                        <div class="flex items-center gap-2 text-[11px] text-gray-500">
+                                            <span class="font-mono font-bold">{{ getItemArea(item).toFixed(2) }} {{ axiom.labels.dimension_unit }}²</span>
                                             <span>×</span>
-                                            <span class="font-mono font-bold">{{ formatRupiah(services.find(s => s.id == item.service_id)?.base_price || 0) }}/m²</span>
+                                            <span class="font-mono font-bold">{{ formatRupiah(services.find(s => s.id == item.service_id)?.base_price || 0) }}/{{ axiom.labels.dimension_unit }}²</span>
                                             <span>×</span>
                                             <span class="font-mono font-bold">{{ item.qty }} pcs</span>
                                             <span>=</span>

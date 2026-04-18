@@ -17,50 +17,24 @@ class Service extends Model
         'unit',
         'has_matrix_pricing',
         'is_active',
-        'is_per_meter',
         'description',
+        'is_pinned',
+        'is_per_meter',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'base_price' => 'decimal:2',
-            'has_matrix_pricing' => 'boolean',
-            'is_active' => 'boolean',
-            'is_per_meter' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'base_price' => 'decimal:2',
+        'has_matrix_pricing' => 'boolean',
+        'is_active' => 'boolean',
+        'is_pinned' => 'boolean',
+        'is_per_meter' => 'boolean',
+    ];
 
     /**
-     * Mendapatkan semua pricing matrix untuk layanan ini.
+     * Relasi ke tabel matriks harga.
      */
     public function prices(): HasMany
     {
         return $this->hasMany(ServicePrice::class);
-    }
-
-    /**
-     * Mendapatkan semua item transaksi yang menggunakan layanan ini.
-     */
-    public function transactionItems(): HasMany
-    {
-        return $this->hasMany(TransactionItem::class);
-    }
-
-    /**
-     * Mendapatkan harga berdasarkan ukuran kertas dan jenis cetak.
-     */
-    public function getPriceFor(?int $paperSizeId, string $printType = 'na'): float
-    {
-        if ($this->has_matrix_pricing) {
-            $price = $this->prices()
-                ->where('paper_size_id', $paperSizeId)
-                ->where('print_type', $printType)
-                ->first();
-
-            return $price ? (float) $price->price : (float) $this->base_price;
-        }
-
-        return (float) $this->base_price;
     }
 }

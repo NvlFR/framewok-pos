@@ -10,7 +10,7 @@ class PaperSize extends Model
     protected $fillable = ['name', 'width', 'height'];
 
     /**
-     * Mendapatkan semua pricing yang menggunakan ukuran kertas ini.
+     * Relasi ke harga layanan cetak.
      */
     public function servicePrices(): HasMany
     {
