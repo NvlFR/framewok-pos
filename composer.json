@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "axiom/pos-framework",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "A premium POS, Order Management & Inventory starter kit.",
+    "keywords": ["laravel", "framework", "pos", "point-of-sale", "vue3", "inertia"],
     "license": "MIT",
     "require": {
         "php": "^8.3",

@@ -24,7 +24,7 @@ defineProps<{
                 </div>
                 <h1 class="text-4xl font-bold tracking-tight text-gray-900">{{ brand.name }}</h1>
                 <p class="mt-4 text-lg text-gray-600 font-medium">{{ brand.slogan }}</p>
-                <div class="mt-8 text-sm text-gray-400">POS &amp; Order Management System</div>
+                <div class="mt-8 text-sm text-gray-400">{{ brand.tagline }}</div>
             </div>
         </div>
         <div class="lg:p-8 bg-white h-full flex items-center justify-center">
